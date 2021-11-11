@@ -1,0 +1,28 @@
+MODEL:
+  META_ARCHITECTURE: 'resnet_face18'
+  WEIGHT: './pretrained/resnet18_110.pth'
+  NUM_CLASS: 7
+  BATCH_SIZE: 256
+  WORKERS: 4
+
+DATASET:
+  DATASET_NAME: 'ExpressionDataset'
+  TRANSFORM_NAME: 'generalized_transform'
+  SAMPLER: 'random_sampler'
+  MEAN: [127.5]  #[102.9801, 115.9465, 122.7717]
+  STD: [1.0]  #[1.0, 1.0, 1.0]
+  RESIZE_SHAPE: [128, 128]
+  CROP_SHAPE: [120, 120]
+  TRAIN_FILE: ''
+  VAL_FILE: ''
+
+SOLVER:
+  OPTIMIZER: 'sgd'
+  SCHEDULER: 'step_lr'
+  LOSS_NAME: 'cross_entropy_loss'
+  BASE_LR: 0.01
+  MAX_EPOCH: 80
+  STEP_SIZE: 35
+
+OUTPUT:
+  WORK_DIR: ''
