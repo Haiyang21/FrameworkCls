@@ -1,3 +1,5 @@
+DISTRIBUTED: True
+
 MODEL:
   META_ARCHITECTURE: 'resnet_face18'
   WEIGHT: './pretrained/resnet18_110.pth'

@@ -4,6 +4,8 @@ from yacs.config import CfgNode as CN
 _C = CN()
 _C.VERSION = 2
 
+_C.DISTRIBUTED = False
+
 # model
 _C.MODEL = CN()
 _C.MODEL.META_ARCHITECTURE = "resnet18"

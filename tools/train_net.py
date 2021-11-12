@@ -7,6 +7,7 @@ from loss.build import build_loss
 from data.build import build_dataloader
 from solver.build import make_optimizer, make_lr_scheduler
 from trainer import do_train
+import torch.distributed as dist
 
 
 if __name__ == "__main__":
@@ -14,6 +15,10 @@ if __name__ == "__main__":
     config_file = 'config/cls.yaml'
     cfg.merge_from_file(config_file)
     cfg.freeze()
+
+    # distrubuted
+    if cfg.DISTRIBUTED is True:
+        dist.init_process_group(backend='nccl')
 
     # output
     work_dir = cfg.OUTPUT.WORK_DIR
@@ -29,14 +34,17 @@ if __name__ == "__main__":
     logger.info("running with config:\n{}".format(cfg))
 
     # model
+    local_rank = -1
+    torch.cuda.set_device(local_rank)
     model = build_model(cfg)
-    use_gpu = torch.cuda.is_available()
-    if use_gpu:
-        model = model.cuda()
+    model.cuda(local_rank)
+    if cfg.DISTRIBUTED is True:
+        model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[local_rank])
     logger.info("running with model:\n{}".format(model))
 
     # criterion
     criterion = build_loss(cfg)
+    criterion = criterion.cuda(local_rank)
 
     # data
     train_dataloader = build_dataloader(cfg, 'train')
@@ -58,5 +66,6 @@ if __name__ == "__main__":
         optimizer=optimizer,
         scheduler=scheduler,
         criterion=criterion,
-        work_dir=work_dir
+        work_dir=work_dir,
+        distributed=cfg.DISTRIBUTED,
     )

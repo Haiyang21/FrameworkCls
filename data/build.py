@@ -15,6 +15,9 @@ def build_dataloader(cfg, phase):
         sampler = None
         batch_size = 1
 
+    if cfg.DISTRIBUTED is True:
+        sampler = torch.utils.data.distributed.DistributedSampler(dataset)
+
     if phase == 'train':
         data_loader = torch.utils.data.DataLoader(
             dataset,

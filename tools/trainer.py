@@ -6,6 +6,7 @@ from collections import defaultdict
 from utils.common import is_pytorch_1_1_0_or_later
 from utils.metric_logger import MetricLogger
 from utils.eval import cal_precision_and_recall
+import torch.distributed as dist
 
 
 def do_train(
@@ -17,6 +18,7 @@ def do_train(
         scheduler,
         criterion,
         work_dir,
+        distributed,
 ):
     meters = MetricLogger(delimiter="  ")
     logger = logging.getLogger(__name__)
@@ -39,6 +41,11 @@ def do_train(
             # process one or multi branch output with the same targets
             for output_id, output in enumerate(outputs):
                 loss = criterion(output, targets)
+
+                if distributed is True:
+                    torch.distributed.barrier()
+                    dist.all_reduce(loss, op=dist.ReduceOp.SUM)
+
                 if isinstance(loss, dict):
                     loss_dict.update(loss)
                 else:
@@ -81,6 +88,7 @@ def do_train(
                     outputs = [outputs]
                 for output_id, output in enumerate(outputs):
                     _, predicts = torch.max(output, 1)
+
                     pred_labels['branch{}'.format(output_id)].extend(predicts.cpu().tolist())
                     gt_labels['branch{}'.format(output_id)].extend(targets.cpu().tolist())
 
